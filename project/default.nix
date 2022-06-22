@@ -86,7 +86,6 @@ in
   #       }) {};
   #     };
 
-
 , shellToolOverrides ? _: _: { }
   # A function returning a record of tools to provide in the
   # nix-shells.

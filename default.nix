@@ -9,8 +9,8 @@
 , useTextJSString ? true # Use an implementation of "Data.Text" that uses the more performant "Data.JSString" from ghcjs-base under the hood.
 , __useTemplateHaskell ? true # Deprecated, just here until we remove feature from reflex and stop CIing it
 , iosSdkVersion ? "13.2"
-, ghc-version ? null
-, ghcjs-version ? null
+, ghc-package ? null # Pick GHC package
+, ghcjs-package ? null # Pick GHCJS Package
 , nixpkgsOverlays ? [ ]
 , haskellOverlays ? [ ] # TODO deprecate
 , haskellOverlaysPre ? [ ]
@@ -244,7 +244,13 @@ let
       ]
     );
   };
-  ghcjs = if ghcjs-version == null then ghcjs8_6 else ghcjs-version;
+  ghcjs =
+    if ghcjs-package == null then
+      ghc8_6 else
+      if ghcjs-package.ghc.version > "8.10.7" then
+        nixpkgs.lib.warn "Unsupported GHC: ${ghcjs-package.ghc.name}" ghcjs-package else
+        ghcjs-package;
+
   ghcjs8_6 = (makeRecursivelyOverridable (nixpkgsCross.ghcjs.haskell.packages.ghcjs86.override (old: {
     ghc = old.ghc.override {
       bootPkgs = nixpkgsCross.ghcjs.buildPackages.haskell.packages.ghc865;
@@ -271,7 +277,12 @@ let
     overrides = nixpkgsCross.wasm.haskell.overlays.combined;
   });
 
-  ghc = if ghc-version == null then ghc8_6 else ghc-version;
+  ghc =
+    if ghc-package == null then
+      ghc8_6 else
+      if ghc-package.ghc.version > "8.10.7" then
+        nixpkgs.lib.warn "Unsupported GHC: ${ghc-package.ghc.name}" ghc-package else ghc-package;
+
   ghcHEAD = (makeRecursivelyOverridable nixpkgs.haskell.packages.ghcHEAD).override {
     overrides = nixpkgs.haskell.overlays.combined;
   };
